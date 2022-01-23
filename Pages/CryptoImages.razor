@@ -1,0 +1,139 @@
+﻿@page "/crypto-images"
+@using MetaMask.Blazor
+@using MetaMask.Blazor.Enums
+@using MetaMask.Blazor.Exceptions
+@inject MetaMaskService MetaMaskService
+
+<PageTitle>Crypto Images</PageTitle>
+
+@if(!HasMetaMask)
+{
+    <MudText Class="mb-4" GutterBottom="true">No MetaMask detected. Please install <MudLink Href="https://metamask.io">MetaMask</MudLink>.</MudText>
+}
+else if (string.IsNullOrEmpty(SelectedAddress))
+{
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="ConnectMetaMask">Initialize connection with MetaMask</MudButton>
+}
+else
+{
+    <MudText Class="mb-4">Active Address: @SelectedAddress</MudText>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="GetBalance">Get Balance</MudButton>
+    <MudText>@RpcResult</MudText>
+}
+
+
+<MudContainer>
+    <MudGrid Spacing="3" Justify="Justify.Center">
+        <CryptoImageGridItem ImageName="sport-3365503_640.jpg"></CryptoImageGridItem>
+        <CryptoImageGridItem ImageName="sport-3365503_640.jpg"></CryptoImageGridItem>
+        <CryptoImageGridItem ImageName="sport-3365503_640.jpg"></CryptoImageGridItem>
+    </MudGrid>
+</MudContainer>
+
+
+@code {
+
+    bool HasMetaMask;
+    string? SelectedAddress;
+    string? SelectedChain;
+    string? TransactionCount;
+    string? SignedData;
+    string? SignedDataV4;
+    string? FunctionResult;
+    string? RpcResult;
+    Chain? Chain;
+
+    protected override async Task OnInitializedAsync()
+    {
+        //Subscribe to events
+            MetaMaskService.AccountChangedEvent += MetaMaskService_AccountChangedEvent;
+            MetaMaskService.ChainChangedEvent += MetaMaskService_ChainChangedEvent;
+
+            HasMetaMask = await MetaMaskService.HasMetaMask();
+            if (HasMetaMask)
+                await MetaMaskService.ListenToEvents();
+
+            bool isSiteConnected = await MetaMaskService.IsSiteConnected();
+            if (isSiteConnected)
+            {
+                await GetSelectedAddress();
+                await GetSelectedNetwork();
+            }
+
+    }
+
+    private async Task MetaMaskService_ChainChangedEvent((long, Chain) arg)
+    {
+        await GetSelectedNetwork();
+        StateHasChanged();
+    }
+
+    private async Task MetaMaskService_AccountChangedEvent(string arg)
+    {
+        await GetSelectedAddress();
+        StateHasChanged();
+    }
+
+    private async Task ConnectMetaMask()
+    {
+        await MetaMaskService.ConnectMetaMask();
+        await GetSelectedAddress();
+    }
+
+    private async Task GetSelectedAddress()
+    {
+        SelectedAddress = await MetaMaskService.GetSelectedAddress();
+        Console.WriteLine($"Address: {SelectedAddress}");
+    }
+
+    private async Task GetSelectedNetwork()
+    {
+        var chainInfo = await MetaMaskService.GetSelectedChain();
+        Chain = chainInfo.chain;
+
+        SelectedChain = $"ChainID: {chainInfo.chainId}, Name: {chainInfo.chain.ToString()}";
+        Console.WriteLine($"ChainID: {chainInfo.chainId}");
+    }
+
+    private async Task GetTransactionCount()
+    {
+        var transactionCount = await MetaMaskService.GetTransactionCount();
+        TransactionCount = $"Transaction count: {transactionCount}";
+    }
+
+    private async Task SignData(string label, string value)
+    {
+        try
+        {
+            var result = await MetaMaskService.SignTypedData("test label", "test value");
+            SignedData = $"Signed: {result}";
+        }
+        catch (UserDeniedException)
+        {
+            SignedData = "User Denied";
+        }
+        catch (Exception ex)
+        {
+            SignedData = $"Exception: {ex}";
+        }
+    }
+
+    private async Task GenericRpc()
+    {
+        var result = await MetaMaskService.RequestAccounts();
+        RpcResult = $"RPC result: {result}";
+    }
+
+    private async Task GetBalance()
+    {
+        var address = await MetaMaskService.GetSelectedAddress();
+        var result = await MetaMaskService.GetBalance(address);
+        RpcResult = $"Balance result: {result / 1e18} eth";
+    }
+
+    private void Dispose()
+    {
+        MetaMaskService.AccountChangedEvent -= MetaMaskService_AccountChangedEvent;
+        MetaMaskService.ChainChangedEvent -= MetaMaskService_ChainChangedEvent;
+    }
+}
