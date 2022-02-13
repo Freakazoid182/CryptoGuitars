@@ -1,4 +1,4 @@
-# MudBlazor NFT
+# CryptoGuitars NFT
 
 __NOTE: This project will get renamed after rebranding__
 
