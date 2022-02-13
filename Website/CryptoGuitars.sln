@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoGuitars.Server", "Server\CryptoGuitars.Server.csproj", "{AD7F293F-C015-4B57-ACB9-33285FD04C50}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoGuitars.Client", "Client\CryptoGuitars.Client.csproj", "{6BD8EBC3-06E5-4725-98C6-80857B25AEDD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoGuitars.Contracts", "Contracts\CryptoGuitars.Contracts.csproj", "{A3463DB6-092C-42AA-A1CC-EE205B48375E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoGuitars.Shared", "Shared\CryptoGuitars.Shared.csproj", "{A4014F95-2D85-41DA-A7B4-0185FD17D3E5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AD7F293F-C015-4B57-ACB9-33285FD04C50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD7F293F-C015-4B57-ACB9-33285FD04C50}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD7F293F-C015-4B57-ACB9-33285FD04C50}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD7F293F-C015-4B57-ACB9-33285FD04C50}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BD8EBC3-06E5-4725-98C6-80857B25AEDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BD8EBC3-06E5-4725-98C6-80857B25AEDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BD8EBC3-06E5-4725-98C6-80857B25AEDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BD8EBC3-06E5-4725-98C6-80857B25AEDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3463DB6-092C-42AA-A1CC-EE205B48375E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3463DB6-092C-42AA-A1CC-EE205B48375E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3463DB6-092C-42AA-A1CC-EE205B48375E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3463DB6-092C-42AA-A1CC-EE205B48375E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4014F95-2D85-41DA-A7B4-0185FD17D3E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4014F95-2D85-41DA-A7B4-0185FD17D3E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4014F95-2D85-41DA-A7B4-0185FD17D3E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4014F95-2D85-41DA-A7B4-0185FD17D3E5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

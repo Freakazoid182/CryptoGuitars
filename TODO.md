@@ -1,18 +1,18 @@
 # TODO List:
 
-- [ ] Create NFT Artwork
-  - [ ] Decide on object type for art (people, animal or other objects)
-  - [ ] Use https://pixilart.com
-  - [ ] 5 layers (including background)
-  - [ ] 5 options per layer
-  - [ ] Use https://nft-generator.art/app to generate images
-    - [ ] Set up rarities
-    - [ ] Generate collection of 1000 images
-  - [ ] Upload images to IPFS
-    - [ ] Use https://www.pinata.cloud/
-- [ ] Create Smart contract for NFT
-  - [ ] Use `ERC-721` contract as base
-  - [ ] Add features where needed (minting fee to me 🙃?)
+- [X] Create NFT Artwork
+  - [X] Decide on object type for art (people, animal or other objects)
+  - [X] Use https://pixilart.com
+  - [X] 5 layers (including background)
+  - [X] 5 options per layer (done sort of)
+  - [X] Use https://nft-generator.art/app to generate images used own
+    - [X] Set up rarities (skipped)
+    - [X] Generate collection of 1000 images (made 625)
+  - [] Upload images to IPFS
+    - [] Use https://www.pinata.cloud/
+- [X] Create Smart contract for NFT
+  - [X] Use `ERC-721` contract as base
+  - [X] Add features where needed (minting fee to me 🙃?)
   - [ ] Publish and test contract on Polygon test network
 - [ ] Create Website using Blazor and MudBlazor components
   - [ ] Add site with MetaMask integration (`MetaMask.Blazor`)
