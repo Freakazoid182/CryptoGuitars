@@ -2,6 +2,7 @@ using Nethereum.Web3;
 using CryptoGuitars.Server.Services;
 using CryptoGuitars.Contracts.CryptoGuitarNFT;
 using Microsoft.Net.Http.Headers;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,9 +38,8 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-
     app.UseCors(policy => policy
-        .WithOrigins("http://localhost:5000", "https://localhost:5001")
+        .WithOrigins(app.Configuration.GetSection("CORS:AllowedOrigins").Get<string[]>())
         .AllowAnyMethod()
         .WithHeaders(HeaderNames.ContentType));
 }
