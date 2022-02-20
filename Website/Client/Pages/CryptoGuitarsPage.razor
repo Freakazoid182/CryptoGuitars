@@ -1,4 +1,4 @@
-﻿@page "/crypto-images"
+﻿@page "/crypto-guitars"
 @using MetaMask.Blazor
 @using MetaMask.Blazor.Enums
 @using Nethereum.ABI.Model
@@ -10,31 +10,28 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject IWeb3 Web3Service
 
-<PageTitle>Crypto Images</PageTitle>
-
-@if(HasMetaMask == null)
-{
-    <MudText Typo="Typo.h3" GutterBottom="true">Loading...</MudText>
-}
-else if(HasMetaMask == false)
-{
-    <MudText Class="mb-4" GutterBottom="true">No MetaMask detected. Please install <MudLink Href="https://metamask.io">MetaMask</MudLink>.</MudText>
-}
-else if (string.IsNullOrEmpty(SelectedAddress))
-{
-    <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="ConnectMetaMask">Initialize connection with MetaMask</MudButton>
-}
+<PageTitle>Crypto Guitars 🎸</PageTitle>
 
 @if(CryptoGuitarTokenDTOs != null)
 {
     <MudContainer>
         <MudGrid Spacing="5">
-            <MudPaper Class="d-inline-flex pa-4 ma-2" Height="200px" Width="170px">
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="Mint">Mint a new Guitar!</MudButton>
-            </MudPaper>
+            @if(!string.IsNullOrEmpty(SelectedAddress))
+            {
+                <MudPaper Class="d-inline-flex pa-4 ma-2" Height="300px" Width="170px">
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="Mint">Mint a new Guitar!</MudButton>
+                </MudPaper>
+            }
+            else if(HasMetaMask == true)
+            {
+                <MudPaper Class="d-inline-flex pa-4 ma-2" Height="300px" Width="170px">
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="ConnectMetaMask">Connect with Metamask to start minting!</MudButton>
+                </MudPaper>
+            }
             @foreach (var item in CryptoGuitarTokenDTOs)
             {
-                <MudPaper Class="ma-2" Height="200px" Width="170px">
+                <MudPaper Class="ma-2" Height="300px" Width="170px">
+                    <MudText>Id: @item.Id</MudText>
                     <MudImage Src="@item?.MetaData?.Image" Alt="@item?.MetaData?.Description" Class="rounded-lg"/>
                     <MudText>Owned By @item?.Owner?.Substring(0, 10)</MudText>
                 </MudPaper>
