@@ -19,6 +19,7 @@ public class CryptoGuitarContractController : ControllerBase
     }
 
     [HttpGet("name")]
+    [ResponseCache(Duration = 86400)]
     public async Task<IActionResult> GetNameAsync()
     {
         var name = await _service.NameQueryAsync();
@@ -26,6 +27,7 @@ public class CryptoGuitarContractController : ControllerBase
     }
 
     [HttpGet("owner-of/{id:long}")]
+    [ResponseCache(Duration = 1)]
     public async Task<IActionResult> GetBalanceOfAsync(long id)
     {
         var owner = await _service.OwnerOfQueryAsync(id);
@@ -33,6 +35,7 @@ public class CryptoGuitarContractController : ControllerBase
     }
 
     [HttpGet("balance-of/{owner}")]
+    [ResponseCache(Duration = 1)]
     public async Task<IActionResult> GetBalanceOfAsync(string owner)
     {
         var balance = await _service.BalanceOfQueryAsync(owner);
@@ -40,6 +43,7 @@ public class CryptoGuitarContractController : ControllerBase
     }
 
     [HttpGet("symbol")]
+    [ResponseCache(Duration = 86400)]
     public async Task<IActionResult> SymbolAsync()
     {
         var symbol = await _service.SymbolQueryAsync();
@@ -47,6 +51,7 @@ public class CryptoGuitarContractController : ControllerBase
     }
 
     [HttpGet("total-supply")]
+    [ResponseCache(Duration = 1)]
     public async Task<IActionResult> TotalSupply()
     {
         var totalSupply = await _service.TotalSupplyQueryAsync();

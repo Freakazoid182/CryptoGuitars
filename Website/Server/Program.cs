@@ -5,6 +5,7 @@ using Microsoft.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddResponseCaching();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -36,11 +37,14 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseCors(policy => policy
-        .WithOrigins(app.Configuration.GetSection("CORS:AllowedOrigins").Get<string[]>())
-        .AllowAnyMethod()
-        .WithHeaders(HeaderNames.ContentType));
 }
+
+app.UseCors(policy => policy
+    .WithOrigins(app.Configuration.GetSection("CORS:AllowedOrigins").Get<string[]>())
+    .AllowAnyMethod()
+    .WithHeaders(HeaderNames.ContentType));
+
+app.UseResponseCaching();
 
 app.UseStaticFiles();
 

@@ -3,8 +3,10 @@
 @using MetaMask.Blazor.Enums
 @using Nethereum.ABI.Model
 @using Nethereum.Web3
+@using Microsoft.AspNetCore.WebUtilities
 @using Microsoft.Extensions.Configuration
 @using CryptoGuitars.Shared.DTOs
+@using CryptoGuitars.Shared.Enums
 @inject IConfiguration Configuration
 @inject MetaMaskService MetaMaskService
 @inject IHttpClientFactory HttpClientFactory
@@ -121,7 +123,18 @@
 
     private async Task LoadTokens()
     {
-        var getCryptoGuitarTokensResult = await ServerHttpClient!.GetFromJsonAsync<GetCryptoGuitarTokensDTO>("/api/v1/crypto-guitars-tokens");
+        var totalSupply = await ServerHttpClient!.GetFromJsonAsync<int>("api/v1/crypto-guitar-contract/total-supply");
+
+        // TODO: Add paging
+        var param = new Dictionary<string, string>()
+        {
+            { "offset", "0" },
+            { "limit", (totalSupply < 10 ? totalSupply : 10).ToString() },
+            { "sort", Sort.Desc.ToString() }
+        };
+
+        var pathAndQuery = QueryHelpers.AddQueryString("/api/v1/crypto-guitars-tokens", param);
+        var getCryptoGuitarTokensResult = await ServerHttpClient!.GetFromJsonAsync<GetCryptoGuitarTokensDTO>(pathAndQuery);
 
         CryptoGuitarTokenDTOs = getCryptoGuitarTokensResult?.Data;
     }

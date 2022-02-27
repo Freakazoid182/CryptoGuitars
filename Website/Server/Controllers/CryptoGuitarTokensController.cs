@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.ResponseCaching;
 using CryptoGuitars.Shared.DTOs;
 using CryptoGuitars.Server.Services;
 using CryptoGuitars.Contracts.CryptoGuitarNFT;
 using CryptoGuitars.Shared.Enums;
 using CryptoGuitars.Shared.Extensions;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Primitives;
 
 namespace CryptoGuitars.Server.Controllers;
 
@@ -26,22 +29,24 @@ public class CryptoGuitarTokensController : ControllerBase
     }
 
     [HttpGet]
+    [ResponseCache(Duration = 3600, VaryByQueryKeys = new string[] { "offset", "limit", "sort" })]
     public async Task<IActionResult> Get(
-        [FromQuery]int offset = 0,
-        [FromQuery]int limit = 10,
-        [FromQuery]Sort sort = Sort.Desc)
+        [FromQuery, Required, Range(0, 10)] int limit,
+        [FromQuery] int offset = 0,
+        [FromQuery] Sort sort = Sort.Desc)
     {
+
         var totalSupply = (int)(await _service.TotalSupplyQueryAsync());
-        if(limit > totalSupply)
+        if (limit > totalSupply)
         {
-            limit = (int)totalSupply;
+            return BadRequest(new ValidationResult("'limit' cannot be higher than supply", new [] { "limit" }));
         }
 
         var tokens = new List<CryptoGuitarTokenDTO>();
         var getTokenDataTasks = new List<Task>();
         for (int i = 0; i < limit; i++)
         {
-             getTokenDataTasks.Add(GetTokenDataAsync(i));
+            getTokenDataTasks.Add(GetTokenDataAsync(i));
         }
 
         await Task.WhenAll(getTokenDataTasks);
