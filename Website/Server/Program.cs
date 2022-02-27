@@ -2,10 +2,8 @@ using Nethereum.Web3;
 using CryptoGuitars.Server.Services;
 using CryptoGuitars.Contracts.CryptoGuitarNFT;
 using Microsoft.Net.Http.Headers;
-using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
