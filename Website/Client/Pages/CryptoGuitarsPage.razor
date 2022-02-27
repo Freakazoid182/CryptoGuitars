@@ -18,22 +18,22 @@
         <MudGrid Spacing="5">
             @if(!string.IsNullOrEmpty(SelectedAddress))
             {
-                <MudPaper Class="d-inline-flex pa-4 ma-2" Height="300px" Width="170px">
-                    <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="Mint">Mint a new Guitar!</MudButton>
+                <MudPaper Class="d-inline-flex pa-4 ma-2" Height="230px" Width="180px">
+                    <MudButton Color="Color.Tertiary" Variant="Variant.Filled" @onclick="Mint">Mint a new Guitar!</MudButton>
                 </MudPaper>
             }
             else if(HasMetaMask == true)
             {
-                <MudPaper Class="d-inline-flex pa-4 ma-2" Height="300px" Width="170px">
-                    <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="ConnectMetaMask">Connect with Metamask to start minting!</MudButton>
+                <MudPaper Class="d-inline-flex pa-4 ma-2" Height="230px" Width="180px">
+                    <MudButton Color="Color.Tertiary" Variant="Variant.Filled" @onclick="ConnectMetaMask">Connect with Metamask to start minting!</MudButton>
                 </MudPaper>
             }
             @foreach (var item in CryptoGuitarTokenDTOs)
             {
-                <MudPaper Class="ma-2" Height="300px" Width="170px">
-                    <MudText>Id: @item.Id</MudText>
-                    <MudImage Src="@item?.MetaData?.Image" Alt="@item?.MetaData?.Description" Class="rounded-lg"/>
-                    <MudText>Owned By @item?.Owner?.Substring(0, 10)</MudText>
+                <MudPaper Class="ma-2" Height="230px" Width="180px">
+                    <MudImage Src="@item?.MetaData?.Image" Alt="@item?.MetaData?.Description" Class="rounded-lg ma-1"/>
+                    <MudText ><b># @item?.Id</b></MudText>
+                    <MudText Typo="Typo.caption">Owned By @item?.Owner?.Substring(0, 10)</MudText>
                 </MudPaper>
             }
         </MudGrid>
