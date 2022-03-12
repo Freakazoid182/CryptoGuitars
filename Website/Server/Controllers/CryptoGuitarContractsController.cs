@@ -1,4 +1,4 @@
-using CryptoGuitars.Contracts.CryptoGuitarNFT;
+using CryptoGuitars.Contracts.CryptoGuitarsNFT;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CryptoGuitars.Server.Controllers;
@@ -8,11 +8,11 @@ namespace CryptoGuitars.Server.Controllers;
 public class CryptoGuitarContractController : ControllerBase
 {
     private readonly ILogger<CryptoGuitarContractController> _logger;
-    private readonly CryptoGuitarNFTService _service;
+    private readonly CryptoGuitarsNFTService _service;
 
     public CryptoGuitarContractController(
         ILogger<CryptoGuitarContractController> logger,
-        CryptoGuitarNFTService service)
+        CryptoGuitarsNFTService service)
     {
         _logger = logger;
         _service = service;

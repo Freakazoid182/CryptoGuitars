@@ -1,6 +1,6 @@
 {
-    "projectName": "CryptoGuitars.Contracts",
-    "namespace": "",
+    "projectName": "CryptoGuitars",
+    "namespace": "CryptoGuitars.Contracts",
     "lang": 0,
     "autoCodeGen": true,
     "projectPath": "../Website/Contracts"

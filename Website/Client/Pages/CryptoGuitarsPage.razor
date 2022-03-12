@@ -150,17 +150,15 @@
         var receipt = await MetaMaskService.SendTransactionAndWaitForReceipt
         (
             Web3Service.Client,
-            "mint",
+            "safeMint",
             contractAddress,
-            Web3.Convert.ToWei(0.05),
+            0,
             new List<Parameter>
             {
-                new Parameter("address", "_to"),
-                new Parameter("uint256", "_tokenId"),
-                new Parameter("string", "_uri")
+                new Parameter("address", "to"),
+                new Parameter("string", "uri")
             }.ToArray(),
             SelectedAddress ?? throw new ArgumentNullException(nameof(SelectedAddress)),
-            tokenIdAndIndex,
             $"{serverUrl}/metadata/CryptoGuitars-{(int)tokenIdAndIndex}-metadata.json"
         );
 

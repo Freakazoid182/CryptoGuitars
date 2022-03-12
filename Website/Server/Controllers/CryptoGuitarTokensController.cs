@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.ResponseCaching;
 using CryptoGuitars.Shared.DTOs;
 using CryptoGuitars.Server.Services;
-using CryptoGuitars.Contracts.CryptoGuitarNFT;
+using CryptoGuitars.Contracts.CryptoGuitarsNFT;
 using CryptoGuitars.Shared.Enums;
 using CryptoGuitars.Shared.Extensions;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.Extensions.Primitives;
 
 namespace CryptoGuitars.Server.Controllers;
 
@@ -15,12 +13,12 @@ namespace CryptoGuitars.Server.Controllers;
 public class CryptoGuitarTokensController : ControllerBase
 {
     private readonly ILogger<CryptoGuitarTokensController> _logger;
-    private readonly CryptoGuitarNFTService _service;
+    private readonly CryptoGuitarsNFTService _service;
     private readonly ITokenMetaDataService _tokenMetaDataService;
 
     public CryptoGuitarTokensController(
         ILogger<CryptoGuitarTokensController> logger,
-        CryptoGuitarNFTService service,
+        CryptoGuitarsNFTService service,
         ITokenMetaDataService tokenMetaDataService)
     {
         _logger = logger;
