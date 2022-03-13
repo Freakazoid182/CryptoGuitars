@@ -19,7 +19,23 @@ async function main() {
 
   await guitarsNFT.deployed();
 
-  console.log("CryptoGuitar NFT deployed to:", guitarsNFT.address);
+  console.log("CryptoGuitars NFT deployed to:", guitarsNFT.address);
+
+  const GuitarsMarketPlace = await ethers.getContractFactory("CryptoGuitarsMarketPlace");
+  const guitarsMarketPlace = await GuitarsMarketPlace.deploy(
+    guitarsNFT.address,
+    "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+    "http://localhost:5163");
+
+  await guitarsMarketPlace.deployed();
+
+  console.log("CryptoGuitars Market Place deployed to:", guitarsMarketPlace.address);
+
+  guitarsNFT.transferOwnership(guitarsMarketPlace.address);
+
+  guitarsNFT.setApprovalForAll(guitarsMarketPlace.address, true);
+
+  console.log("Transferred ownership of the NFT contract to the marketplace contract");
 }
 
 // We recommend this pattern to be able to use async/await everywhere
