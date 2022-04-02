@@ -1,7 +1,9 @@
 using Nethereum.Web3;
 using CryptoGuitars.Server.Services;
 using CryptoGuitars.Contracts.CryptoGuitarsNFT;
+
 using Microsoft.Net.Http.Headers;
+using CryptoGuitars.Contracts.CryptoGuitarsMarketPlace;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,10 @@ builder.Services.AddScoped<Web3>(services =>
 builder.Services.AddScoped<CryptoGuitarsNFTService>(services =>
     new CryptoGuitarsNFTService(services.GetRequiredService<Web3>(),
     builder.Configuration.GetValue<string>("Contracts:CryptoGuitarsNFT:Address")));
+
+    builder.Services.AddScoped<CryptoGuitarsMarketPlaceService>(services =>
+    new CryptoGuitarsMarketPlaceService(services.GetRequiredService<Web3>(),
+    builder.Configuration.GetValue<string>("Contracts:CryptoGuitarsMarketPlace:Address")));
 
 var httpClientRegistration = builder.Services.AddHttpClient<ITokenMetaDataService, TokenMetaDataService>();
 

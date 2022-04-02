@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using CryptoGuitars.Contracts.CryptoGuitarsNFT;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,13 +10,16 @@ public class CryptoGuitarContractController : ControllerBase
 {
     private readonly ILogger<CryptoGuitarContractController> _logger;
     private readonly CryptoGuitarsNFTService _service;
+    private readonly IConfiguration _configuration;
 
     public CryptoGuitarContractController(
         ILogger<CryptoGuitarContractController> logger,
-        CryptoGuitarsNFTService service)
+        CryptoGuitarsNFTService service,
+        IConfiguration configuration)
     {
         _logger = logger;
         _service = service;
+        _configuration = configuration;
     }
 
     [HttpGet("name")]
@@ -28,7 +32,7 @@ public class CryptoGuitarContractController : ControllerBase
 
     [HttpGet("owner-of/{id:long}")]
     [ResponseCache(Duration = 1)]
-    public async Task<IActionResult> GetBalanceOfAsync(long id)
+    public async Task<IActionResult> GetOwnerOf(long id)
     {
         var owner = await _service.OwnerOfQueryAsync(id);
         return Ok(owner);
@@ -56,5 +60,16 @@ public class CryptoGuitarContractController : ControllerBase
     {
         var totalSupply = await _service.TotalSupplyQueryAsync();
         return Ok((int)totalSupply);
+    }
+
+    [HttpGet("is-market-approved")]
+    [ResponseCache(Duration = 1)]
+    public async Task<IActionResult> IsMarketApproved(string owner)
+    {
+        var isMarketApproved = await _service.IsApprovedForAllQueryAsync(
+            owner,
+            _configuration.GetValue<string>("Contracts:CryptoGuitarsMarketPlace:Address"));
+
+        return Ok(isMarketApproved);
     }
 }

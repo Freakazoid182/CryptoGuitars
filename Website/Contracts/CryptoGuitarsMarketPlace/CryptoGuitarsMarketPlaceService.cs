@@ -94,6 +94,19 @@ namespace CryptoGuitars.Contracts.CryptoGuitarsMarketPlace
              return ContractHandler.SendRequestAndWaitForReceiptAsync(createNewTokenFunction, cancellationToken);
         }
 
+        public Task<GetActiveOfferOutputDTO> GetActiveOfferQueryAsync(GetActiveOfferFunction getActiveOfferFunction, BlockParameter blockParameter = null)
+        {
+            return ContractHandler.QueryDeserializingToObjectAsync<GetActiveOfferFunction, GetActiveOfferOutputDTO>(getActiveOfferFunction, blockParameter);
+        }
+
+        public Task<GetActiveOfferOutputDTO> GetActiveOfferQueryAsync(BigInteger tokenId, BlockParameter blockParameter = null)
+        {
+            var getActiveOfferFunction = new GetActiveOfferFunction();
+                getActiveOfferFunction.TokenId = tokenId;
+            
+            return ContractHandler.QueryDeserializingToObjectAsync<GetActiveOfferFunction, GetActiveOfferOutputDTO>(getActiveOfferFunction, blockParameter);
+        }
+
         public Task<bool> HasActiveOfferQueryAsync(HasActiveOfferFunction hasActiveOfferFunction, BlockParameter blockParameter = null)
         {
             return ContractHandler.QueryAsync<HasActiveOfferFunction, bool>(hasActiveOfferFunction, blockParameter);

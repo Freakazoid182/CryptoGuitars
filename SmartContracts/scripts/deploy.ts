@@ -33,8 +33,6 @@ async function main() {
 
   guitarsNFT.transferOwnership(guitarsMarketPlace.address);
 
-  guitarsNFT.setApprovalForAll(guitarsMarketPlace.address, true);
-
   console.log("Transferred ownership of the NFT contract to the marketplace contract");
 }
 

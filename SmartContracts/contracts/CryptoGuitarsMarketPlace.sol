@@ -24,6 +24,7 @@ contract CryptoGuitarsMarketPlace is Ownable {
     }
 
     Offer[] internal offers;
+
     mapping(uint256 => Offer) internal tokenIdToOffer;
 
     constructor(
@@ -57,6 +58,17 @@ contract CryptoGuitarsMarketPlace is Ownable {
         return tokenIdToOffer[_tokenId].active;
     }
 
+    function getActiveOffer(uint256 _tokenId) public view returns (Offer memory) {
+        return tokenIdToOffer[_tokenId];
+    }
+
+    modifier marketApproved() {
+        require(
+            _cryptoGuitarsNFTContract.isApprovedForAll(msg.sender, address(this)),
+            "market must be approved operator"
+        );
+        _;
+    }
 
     // Create a new token (mint)
     function createNewToken(address to) external payable {
@@ -70,9 +82,6 @@ contract CryptoGuitarsMarketPlace is Ownable {
         // Mint a new token
         _cryptoGuitarsNFTContract.safeMint(to, uri);
 
-        // approve the marketplace to transfer the ownership
-        _cryptoGuitarsNFTContract.approve(address(this), tokenId);
-
         // Sending the complete value of the token to a fee receiver
         _feeReceiverAddress.transfer(msg.value);
     }
@@ -80,6 +89,7 @@ contract CryptoGuitarsMarketPlace is Ownable {
     // Offer a token
     function offerToken(uint256 tokenId, uint256 price)
         external
+        marketApproved
         onlyTokenOwner(tokenId)
         noActiveOffer(tokenId) {
 

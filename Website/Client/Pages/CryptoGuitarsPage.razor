@@ -1,41 +1,53 @@
 ﻿@page "/crypto-guitars"
 @using MetaMask.Blazor
-@using MetaMask.Blazor.Enums
+@using Models
 @using Nethereum.ABI.Model
 @using Nethereum.Web3
 @using Microsoft.AspNetCore.WebUtilities
 @using Microsoft.Extensions.Configuration
 @using CryptoGuitars.Shared.DTOs
 @using CryptoGuitars.Shared.Enums
+@using System.Numerics
 @inject IConfiguration Configuration
 @inject MetaMaskService MetaMaskService
 @inject IHttpClientFactory HttpClientFactory
 @inject IWeb3 Web3Service
+@inject IJSRuntime JSRuntime
 
-<PageTitle>Crypto Guitars 🎸</PageTitle>
+<PageTitle>Crypto Guitars</PageTitle>
 
 @if(CryptoGuitarTokenDTOs != null)
 {
     <MudContainer>
         <MudGrid Spacing="5">
-            @if(!string.IsNullOrEmpty(SelectedAddress))
+            @if(AccountConnected)
             {
-                <MudPaper Class="d-inline-flex pa-4 ma-2" Height="230px" Width="180px">
+                <MudPaper Class="d-inline-flex pa-4 ma-2" Height="370px" Width="180px">
                     <MudButton Color="Color.Tertiary" Variant="Variant.Filled" @onclick="Mint">Mint a new Guitar!</MudButton>
                 </MudPaper>
             }
-            else if(HasMetaMask == true)
+            @foreach (var token in CryptoGuitarTokenDTOs)
             {
-                <MudPaper Class="d-inline-flex pa-4 ma-2" Height="230px" Width="180px">
-                    <MudButton Color="Color.Tertiary" Variant="Variant.Filled" @onclick="ConnectMetaMask">Connect with Metamask to start minting!</MudButton>
-                </MudPaper>
-            }
-            @foreach (var item in CryptoGuitarTokenDTOs)
-            {
-                <MudPaper Class="ma-2" Height="230px" Width="180px">
-                    <MudImage Src="@item?.MetaData?.Image" Alt="@item?.MetaData?.Description" Class="rounded-lg ma-1"/>
-                    <MudText ><b># @item?.Id</b></MudText>
-                    <MudText Typo="Typo.caption">Owned By @item?.Owner?.Substring(0, 10)</MudText>
+                <MudPaper Class="ma-2" Height="370px" Width="180px">
+                    <MudImage Src="@token?.MetaData?.Image" Alt="@token?.MetaData?.Description" Class="rounded-lg ma-1"/>
+                    <MudText ><b># @token?.Id</b></MudText>
+                    <MudText Typo="Typo.caption">Owned By @token?.Owner?.Substring(0, 10)</MudText>
+                    @if(TokenCanBeOffered(token!) && CanAllowMarket())
+                    {
+                        <MudButton Class="my-2" Color="Color.Tertiary" Variant="Variant.Filled" @onclick="AllowMarketOperator">Approve for Market</MudButton>
+                    }
+                    @if(TokenCanBeOffered(token!))
+                    {
+                        <MudForm @ref="forms[token!.Id]">
+                            <MudTextField Class="my-2" Required="true" @bind-Value="OfferPrices[token!.Id]" Label="Amount (eth)" Variant="Variant.Text" Adornment="Adornment.Start" />
+                            <MudButton Class="my-2" Color="Color.Tertiary" Variant="Variant.Filled" @onclick="() => Offer(token!.Id)">Offer it!</MudButton>
+                        </MudForm>
+                    }
+                    @if(TokenCanBeBought(token!))
+                    {
+                        <MudText>Offered. Price: @Web3.Convert.FromWei((BigInteger)token?.OfferPrice!) eth</MudText>
+                        <MudButton Color="Color.Tertiary" Variant="Variant.Filled" @onclick="() => Buy(token!)">Buy</MudButton>
+                    }
                 </MudPaper>
             }
         </MudGrid>
@@ -46,79 +58,26 @@
 
     IEnumerable<CryptoGuitarTokenDTO>? CryptoGuitarTokenDTOs;
     HttpClient? ServerHttpClient;
-    bool? HasMetaMask;
-    string? SelectedAddress;
-    string? SelectedChain;
 
-    string? RpcResult;
-    Chain? Chain;
+    [CascadingParameter]
+    public MetaMaskState? MetaMaskState { get; set; }
+
+    [CascadingParameter]
+    public AccountState? AccountState { get; set; }
+
+    public bool AccountConnected => !string.IsNullOrEmpty(MetaMaskState?.SelectedAddress);
+
+    Dictionary<uint, double?> OfferPrices = new Dictionary<uint, double?>();
+
+    bool disabled { get; set; } = true;
+
+    Dictionary<uint, MudForm> forms = new Dictionary<uint, MudForm>();
 
     protected override async Task OnInitializedAsync()
     {
         ServerHttpClient = HttpClientFactory.CreateClient("server");
 
-        //Subscribe to events
-        MetaMaskService.AccountChangedEvent += MetaMaskService_AccountChangedEvent;
-        MetaMaskService.ChainChangedEvent += MetaMaskService_ChainChangedEvent;
-
-        HasMetaMask = await MetaMaskService.HasMetaMask();
-        if (HasMetaMask == true)
-            await MetaMaskService.ListenToEvents();
-
-        bool isSiteConnected = await MetaMaskService.IsSiteConnected();
-        if (isSiteConnected)
-        {
-            await GetSelectedAddress();
-            await GetSelectedNetwork();
-        }
-
         await LoadTokens();
-    }
-
-    private async Task MetaMaskService_ChainChangedEvent((long, Chain) arg)
-    {
-        await GetSelectedNetwork();
-        StateHasChanged();
-    }
-
-    private async Task MetaMaskService_AccountChangedEvent(string arg)
-    {
-        await GetSelectedAddress();
-        StateHasChanged();
-    }
-
-    private async Task ConnectMetaMask()
-    {
-        await MetaMaskService.ConnectMetaMask();
-        await GetSelectedAddress();
-    }
-
-    private async Task GetSelectedAddress()
-    {
-        SelectedAddress = await MetaMaskService.GetSelectedAddress();
-        Console.WriteLine($"Address: {SelectedAddress}");
-    }
-
-    private async Task GetSelectedNetwork()
-    {
-        var chainInfo = await MetaMaskService.GetSelectedChain();
-        Chain = chainInfo.chain;
-
-        SelectedChain = $"ChainID: {chainInfo.chainId}, Name: {chainInfo.chain.ToString()}";
-        Console.WriteLine($"ChainID: {chainInfo.chainId}");
-    }
-
-    private async Task GetBalance()
-    {
-        var address = await MetaMaskService.GetSelectedAddress();
-        var result = await MetaMaskService.GetBalance(address);
-        RpcResult = $"Balance result: {result / 1e18} eth";
-    }
-
-    private void Dispose()
-    {
-        MetaMaskService.AccountChangedEvent -= MetaMaskService_AccountChangedEvent;
-        MetaMaskService.ChainChangedEvent -= MetaMaskService_ChainChangedEvent;
     }
 
     private async Task LoadTokens()
@@ -137,15 +96,20 @@
         var getCryptoGuitarTokensResult = await ServerHttpClient!.GetFromJsonAsync<GetCryptoGuitarTokensDTO>(pathAndQuery);
 
         CryptoGuitarTokenDTOs = getCryptoGuitarTokensResult?.Data;
+
+        if(CryptoGuitarTokenDTOs != null)
+        {
+            foreach(var token in CryptoGuitarTokenDTOs.SkipWhile(c => OfferPrices.ContainsKey(c.Id)))
+            {
+                OfferPrices.TryAdd(token.Id, null);
+            }
+        }
     }
 
-    private async void Mint()
+    private async Task Mint()
     {
         var contractAddress = Configuration["Contracts:CryptoGuitarsMarketPlace:Address"];
-        string serverUrl = Configuration["Server:BaseUrl"];
-        var serverHttpClient = ServerHttpClient ?? throw new NullReferenceException(nameof(ServerHttpClient));
 
-        // This is slightly weak and the tokenId should probably be generated by the contract
         var receipt = await MetaMaskService.SendTransactionAndWaitForReceipt
         (
             Web3Service.Client,
@@ -156,11 +120,116 @@
             {
                 new Parameter("address", "to")
             }.ToArray(),
-            SelectedAddress ?? throw new ArgumentNullException(nameof(SelectedAddress))
+            MetaMaskState!.SelectedAddress ?? throw new ArgumentNullException(nameof(MetaMaskState.SelectedAddress))
+        );
+
+        await LoadTokens();
+
+        AccountState!.TokenBalance++;
+
+        StateHasChanged();
+    }
+
+    private async Task AllowMarketOperator()
+    {
+        var confirm = await JSRuntime.InvokeAsync<bool>("confirm", "This will allow the Crypto Guitars NFT marketplace to operate on all your owned token.");
+        if(confirm == false) return;
+
+        var marketPlaceAddress = Configuration["Contracts:CryptoGuitarsMarketPlace:Address"];
+        var nftAddress = Configuration["Contracts:CryptoGuitarsNFT:Address"];
+
+        var setOperatorReceipt = await MetaMaskService.SendTransactionAndWaitForReceipt
+        (
+            Web3Service.Client,
+            "setApprovalForAll",
+            nftAddress,
+            0,
+            new List<Parameter>
+            {
+                new Parameter("address", "operator"),
+                new Parameter("bool", "approved")
+            }.ToArray(),
+            marketPlaceAddress,
+            true
+        );
+
+        AccountState!.IsMarketApproved = true;
+
+        StateHasChanged();
+    }
+
+    private async Task Offer(uint tokenId)
+    {
+        var form = forms[tokenId];
+
+        await form.Validate();
+
+        if(!form.IsValid) return;
+
+        var marketPlaceAddress = Configuration["Contracts:CryptoGuitarsMarketPlace:Address"];
+
+        var offerReceipt = await MetaMaskService.SendTransactionAndWaitForReceipt
+        (
+            Web3Service.Client,
+            "offerToken",
+            marketPlaceAddress,
+            0,
+            new List<Parameter>
+            {
+                new Parameter("uint256", "tokenId"),
+                new Parameter("uint256", "price")
+            }.ToArray(),
+            tokenId,
+            Web3.Convert.ToWei(OfferPrices[tokenId]!.Value)
         );
 
         await LoadTokens();
 
         StateHasChanged();
+    }
+
+    private async Task Buy(CryptoGuitarTokenDTO token)
+    {
+        var contractAddress = Configuration["Contracts:CryptoGuitarsMarketPlace:Address"];
+
+        var receipt = await MetaMaskService.SendTransactionAndWaitForReceipt
+        (
+            Web3Service.Client,
+            "buyToken",
+            contractAddress,
+            (BigInteger)token.OfferPrice,
+            new List<Parameter>
+            {
+                new Parameter("uint256", "_tokenId"),
+            }.ToArray(),
+            token.Id
+        );
+
+        await LoadTokens();
+
+        StateHasChanged();
+    }
+
+    private bool TokenCanBeOffered(CryptoGuitarTokenDTO token)
+    {
+        return
+            token.Owner?.ToLower() == MetaMaskState?.SelectedAddress?.ToLower() &&
+            token.IsOffered != true &&
+            AccountState?.IsMarketApproved == true;
+    }
+
+    private bool TokenCanBeBought(CryptoGuitarTokenDTO token)
+    {
+        return
+            token.Owner?.ToLower() != MetaMaskState?.SelectedAddress?.ToLower() &&
+            token.IsOffered == true;
+    }
+
+    private bool CanAllowMarket()
+    {
+        return
+            AccountConnected &&
+            AccountState?.IsMarketApproved == false &&
+            AccountState?.TokenBalance > 0;
     }
 }

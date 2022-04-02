@@ -1,4 +1,9 @@
-﻿@inherits LayoutComponentBase
+﻿@using MetaMask.Blazor.Enums
+@using Microsoft.AspNetCore.WebUtilities
+@using Models
+@inherits LayoutComponentBase
+@inject MetaMaskService MetaMaskService
+@inject IHttpClientFactory HttpClientFactory
 
 <MudThemeProvider IsDarkMode="true"/>
 <MudDialogProvider />
@@ -8,6 +13,9 @@
     <MudAppBar Elevation="0">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudSpacer />
+        <MudAvatar @bind-Color="_avatarColor" Variant="Variant.Outlined">
+            <MudIcon Icon="@Icons.Material.Filled.AccountCircle" @onclick="ConnectMetaMask" />
+        </MudAvatar>
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="1">
         <MudDrawerHeader>
@@ -15,18 +23,171 @@
         </MudDrawerHeader>
         <NavMenu />
     </MudDrawer>
-    <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
-            @Body
-        </MudContainer>
-    </MudMainContent>
+        <MudMainContent>
+        @if(AccountState != null & MetaMaskState != null)
+        {
+            <CascadingValue Value="@AccountState">
+                <CascadingValue Value="@MetaMaskState">
+                    <MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
+                        @Body
+                    </MudContainer>
+                </CascadingValue>
+            </CascadingValue>
+        }
+        </MudMainContent>
 </MudLayout>
 
 @code {
     bool _drawerOpen = true;
 
+
+    Color _avatarColor = Color.Secondary;
+
+    bool _hasMetaMask;
+
+    bool _isMarketApproved;
+
+    string? _selectedAddress;
+
+    int _tokenBalance;
+
+    Chain? _selectedChain;
+
+    MetaMaskState? MetaMaskState;
+
+    AccountState? AccountState;
+
+    HttpClient? ServerHttpClient;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ServerHttpClient = HttpClientFactory.CreateClient("server");
+
+        //Subscribe to events
+        MetaMaskService.AccountChangedEvent += MetaMaskService_AccountChangedEvent;
+        MetaMaskService.ChainChangedEvent += MetaMaskService_ChainChangedEvent;
+
+        _hasMetaMask = await MetaMaskService.HasMetaMask();
+        if (_hasMetaMask == true)
+            await MetaMaskService.ListenToEvents();
+
+        bool isSiteConnected = await MetaMaskService.IsSiteConnected();
+        if (isSiteConnected)
+        {
+            await GetSelectedAddress();
+            await GetSelectedNetwork();
+            await GetMarketApproved();
+            await GetBalanceOf();
+            _avatarColor = Color.Primary;
+        }
+
+        UpdateState();
+    }
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
     }
+
+    private void UpdateState()
+    {
+        if(!string.IsNullOrEmpty(_selectedAddress) && _selectedChain.HasValue)
+        {
+            if(MetaMaskState == null)
+            {
+                MetaMaskState ??= new MetaMaskState(_hasMetaMask, _selectedAddress, _selectedChain.Value);
+            }
+            else
+            {
+                MetaMaskState.HasMetaMask = _hasMetaMask;
+                MetaMaskState.Chain = _selectedChain.Value;
+                MetaMaskState.SelectedAddress = _selectedAddress;
+            }
+        }
+        else
+        {
+            MetaMaskState = null;
+        }
+
+        AccountState ??= new AccountState();
+        AccountState.IsMarketApproved = _isMarketApproved;
+        AccountState.TokenBalance = _tokenBalance;
+    }
+
+    private async Task MetaMaskService_ChainChangedEvent((long, Chain) arg)
+    {
+        await GetSelectedNetwork();
+        await GetMarketApproved();
+        await GetBalanceOf();
+        UpdateState();
+        StateHasChanged();
+    }
+
+    private async Task MetaMaskService_AccountChangedEvent(string arg)
+    {
+        await GetSelectedAddress();
+        await GetMarketApproved();
+        await GetBalanceOf();
+        UpdateState();
+        StateHasChanged();
+    }
+
+    private async Task ConnectMetaMask()
+    {
+        await MetaMaskService.ConnectMetaMask();
+        await GetSelectedAddress();
+    }
+    private async Task GetSelectedAddress()
+    {
+        _selectedAddress = await MetaMaskService.GetSelectedAddress();
+        if(_selectedAddress != null)
+            _avatarColor = Color.Primary;
+
+        Console.WriteLine($"Address: {_selectedAddress}");
+    }
+
+    private async Task GetSelectedNetwork()
+    {
+        var chainInfo = await MetaMaskService.GetSelectedChain();
+        _selectedChain = chainInfo.chain;
+
+        Console.WriteLine($"ChainID: {chainInfo.chainId}");
+    }
+
+    private async Task GetMarketApproved()
+    {
+        if(string.IsNullOrEmpty(_selectedAddress))
+        {
+            _isMarketApproved = false;
+            return;
+        }
+
+        var param = new Dictionary<string, string>()
+        {
+            { "owner", _selectedAddress ?? throw new InvalidOperationException($"{nameof(Models.MetaMaskState.SelectedAddress)} is null") },
+        };
+
+        var pathAndQuery = QueryHelpers.AddQueryString("/api/v1/crypto-guitar-contract/is-market-approved", param);
+
+        _isMarketApproved = await ServerHttpClient!.GetFromJsonAsync<bool>(pathAndQuery);
+    }
+
+    private async Task GetBalanceOf()
+    {
+        if(string.IsNullOrEmpty(_selectedAddress))
+        {
+            _tokenBalance = 0;
+            return;
+        }
+
+        var path = $"/api/v1/crypto-guitar-contract/balance-of/{_selectedAddress}";
+
+        _tokenBalance = await ServerHttpClient!.GetFromJsonAsync<int>(path);
+    }
+
+    private void Dispose()
+    {
+        MetaMaskService.AccountChangedEvent -= MetaMaskService_AccountChangedEvent;
+        MetaMaskService.ChainChangedEvent -= MetaMaskService_ChainChangedEvent;
+    }
+
 }
