@@ -1,0 +1,180 @@
+@namespace CryptoGuitars.Client.Components
+@using Models
+@using CryptoGuitars.Shared.DTOs
+@using System.Numerics
+@using Nethereum.ABI.Model
+@using Nethereum.Web3
+@inject IConfiguration Configuration
+@inject MetaMaskService MetaMaskService
+@inject IHttpClientFactory HttpClientFactory
+@inject IWeb3 Web3Service
+@inject IJSRuntime JSRuntime
+
+@if(Token != null)
+{
+    <MudPaper Class="ma-2" Height="400px" Width="180px">
+        <MudImage Src="@Token.MetaData?.Image" Alt="@Token.MetaData?.Description" Class="rounded-lg ma-1"/>
+        <MudText ><b># @Token.Id</b></MudText>
+        <MudText Typo="Typo.caption">Owned By @Token.Owner?.Substring(0, 10)</MudText><br />
+        @if(Token.IsOffered)
+        {
+            <MudText Typo="Typo.caption">Offered for: @Web3.Convert.FromWei((BigInteger)Token.OfferPrice) eth</MudText><br />
+        }
+        else
+        {
+            <MudText Typo="Typo.caption">No offering</MudText><br />
+        }
+        @if(NeedsAllowMarket())
+        {
+            <MudButton Class="my-2" Color="Color.Tertiary" Variant="Variant.Filled" @onclick="AllowMarketOperator">Approve for Market</MudButton>
+        }
+        @if(!NeedsAllowMarket() && TokenCanBeOffered())
+        {
+            <MudForm @ref="form">
+                <MudTextField Class="my-2" Required="true" @bind-Value="offerPrice" Label="Amount (eth)" Variant="Variant.Text" Adornment="Adornment.Start" />
+                <MudButton Class="my-2" Color="Color.Tertiary" Variant="Variant.Filled" @onclick="() => Offer()">Offer it!</MudButton>
+            </MudForm>
+        }
+        @if(TokenCanBeBought())
+        {
+            <MudButton Color="Color.Tertiary" Variant="Variant.Filled" @onclick="() => Buy()">Buy</MudButton>
+        }
+    </MudPaper>
+}
+
+@code {
+
+    [CascadingParameter]
+    public MetaMaskState? MetaMaskState { get; set; }
+
+    [CascadingParameter]
+    public AccountState? AccountState { get; set; }
+
+    [CascadingParameter]
+    public TokenGrid? _Parent { get ; set; }
+
+    public bool AccountConnected => !string.IsNullOrEmpty(MetaMaskState?.SelectedAddress);
+
+    [Parameter]
+    public CryptoGuitarTokenDTO? Token { get; set; }
+
+    MudForm? form;
+
+    double? offerPrice;
+
+    private async Task AllowMarketOperator()
+    {
+        var confirm = await JSRuntime.InvokeAsync<bool>("confirm", "This will allow the Crypto Guitars NFT marketplace to operate on all your owned token.");
+        if(confirm == false) return;
+
+        var marketPlaceAddress = Configuration["Contracts:CryptoGuitarsMarketPlace:Address"];
+        var nftAddress = Configuration["Contracts:CryptoGuitarsNFT:Address"];
+
+        var setOperatorReceipt = await MetaMaskService.SendTransactionAndWaitForReceipt
+        (
+            Web3Service.Client,
+            "setApprovalForAll",
+            nftAddress,
+            0,
+            new List<Parameter>
+            {
+                new Parameter("address", "operator"),
+                new Parameter("bool", "approved")
+            }.ToArray(),
+            marketPlaceAddress,
+            true
+        );
+
+        AccountState!.IsMarketApproved = true;
+
+        // All items need to be refreshed in the parent component
+        _Parent?.RefreshState();
+
+        StateHasChanged();
+    }
+
+    private async Task Offer()
+    {
+        if (Token == null) return;
+        if(form == null) return;
+
+        await form.Validate();
+
+        if(!form.IsValid) return;
+
+        var marketPlaceAddress = Configuration["Contracts:CryptoGuitarsMarketPlace:Address"];
+
+        var offerPriceWei = Web3.Convert.ToWei(offerPrice!.Value);
+
+        var offerReceipt = await MetaMaskService.SendTransactionAndWaitForReceipt
+        (
+            Web3Service.Client,
+            "offerToken",
+            marketPlaceAddress,
+            0,
+            new List<Parameter>
+            {
+                new Parameter("uint256", "tokenId"),
+                new Parameter("uint256", "price")
+            }.ToArray(),
+            Token.Id,
+            offerPriceWei
+        );
+
+        Token.IsOffered = true;
+        Token.OfferPrice = (double)offerPriceWei;
+
+        StateHasChanged();
+    }
+
+    private async Task Buy()
+    {
+        if (Token == null) return;
+
+        var contractAddress = Configuration["Contracts:CryptoGuitarsMarketPlace:Address"];
+
+        var receipt = await MetaMaskService.SendTransactionAndWaitForReceipt
+        (
+            Web3Service.Client,
+            "buyToken",
+            contractAddress,
+            (BigInteger)Token.OfferPrice,
+            new List<Parameter>
+            {
+                new Parameter("uint256", "_tokenId"),
+            }.ToArray(),
+            Token.Id
+        );
+
+        Token.IsOffered = false;
+        Token.Owner = MetaMaskState?.SelectedAddress.ToLower();
+        Token.OfferPrice = 0;
+
+        StateHasChanged();
+    }
+
+    private bool TokenCanBeOffered()
+    {
+        if(Token == null) return false;
+        return
+            Token.Owner?.ToLower() == MetaMaskState?.SelectedAddress?.ToLower() &&
+            Token.IsOffered != true;
+    }
+
+    private bool TokenCanBeBought()
+    {
+        if(Token == null) return false;
+        return
+            Token.Owner?.ToLower() != MetaMaskState?.SelectedAddress?.ToLower() &&
+            Token.IsOffered == true;
+    }
+
+    private bool NeedsAllowMarket()
+    {
+        return
+            AccountConnected &&
+            AccountState?.IsMarketApproved == false &&
+            AccountState?.TokenBalance > 0 &&
+            TokenCanBeOffered();
+    }
+}

@@ -12,7 +12,7 @@ public class CryptoGuitarTokenDTO
 
     public bool IsOffered { get; set; }
 
-    public decimal OfferPrice { get; set; }
+    public double OfferPrice { get; set; }
 
     public TokenMetaDataDTO? MetaData { get; set; }
 }

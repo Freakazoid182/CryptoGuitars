@@ -1,0 +1,98 @@
+@namespace CryptoGuitars.Client.Components
+@using CryptoGuitars.Shared.Enums
+@using Microsoft.AspNetCore.WebUtilities
+@using Models
+@using CryptoGuitars.Shared.DTOs
+@using Nethereum.ABI.Model
+@using Nethereum.Web3
+@inject IConfiguration Configuration
+@inject MetaMaskService MetaMaskService
+@inject IHttpClientFactory HttpClientFactory
+@inject IWeb3 Web3Service
+
+@if(CryptoGuitarTokenDTOs != null)
+{
+    <MudContainer>
+        <MudGrid Spacing="5">
+            @if(AccountConnected)
+            {
+                <MudPaper Class="d-inline-flex pa-4 ma-2" Height="400px" Width="180px">
+                    <MudButton Color="Color.Tertiary" Variant="Variant.Filled" @onclick="Mint">Mint a new Guitar!</MudButton>
+                </MudPaper>
+            }
+            @foreach (var token in CryptoGuitarTokenDTOs)
+            {
+                <CascadingValue Value="this">
+                    <TokenItem Token="@token"/>
+                </CascadingValue>
+            }
+        </MudGrid>
+    </MudContainer>
+}
+
+@code {
+    IEnumerable<CryptoGuitarTokenDTO>? CryptoGuitarTokenDTOs;
+    HttpClient? ServerHttpClient;
+
+    [CascadingParameter]
+    public MetaMaskState? MetaMaskState { get; set; }
+
+    [CascadingParameter]
+    public AccountState? AccountState { get; set; }
+
+    public bool AccountConnected => !string.IsNullOrEmpty(MetaMaskState?.SelectedAddress);
+
+    protected override async Task OnInitializedAsync()
+    {
+        ServerHttpClient = HttpClientFactory.CreateClient("server");
+
+        await LoadTokens();
+    }
+
+    public void RefreshState()
+    {
+        StateHasChanged();
+    }
+
+    private async Task LoadTokens()
+    {
+        var totalSupply = await ServerHttpClient!.GetFromJsonAsync<int>("api/v1/crypto-guitar-contract/total-supply");
+
+        // TODO: Add paging
+        var param = new Dictionary<string, string>()
+        {
+            { "offset", "0" },
+            { "limit", (totalSupply < 10 ? totalSupply : 10).ToString() },
+            { "sort", Sort.Desc.ToString() }
+        };
+
+        var pathAndQuery = QueryHelpers.AddQueryString("/api/v1/crypto-guitars-tokens", param);
+        var getCryptoGuitarTokensResult = await ServerHttpClient!.GetFromJsonAsync<GetCryptoGuitarTokensDTO>(pathAndQuery);
+
+        CryptoGuitarTokenDTOs = getCryptoGuitarTokensResult?.Data;
+    }
+
+    private async Task Mint()
+    {
+        var contractAddress = Configuration["Contracts:CryptoGuitarsMarketPlace:Address"];
+
+        var receipt = await MetaMaskService.SendTransactionAndWaitForReceipt
+        (
+            Web3Service.Client,
+            "createNewToken",
+            contractAddress,
+            Web3.Convert.ToWei(0.05),
+            new List<Parameter>
+            {
+                new Parameter("address", "to")
+            }.ToArray(),
+            MetaMaskState!.SelectedAddress ?? throw new ArgumentNullException(nameof(MetaMaskState.SelectedAddress))
+        );
+
+        await LoadTokens();
+
+        AccountState!.TokenBalance++;
+
+        StateHasChanged();
+    }
+}
