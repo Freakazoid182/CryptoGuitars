@@ -8,17 +8,22 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract CryptoGuitarsNFT is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
-    using Counters for Counters.Counter;
 
-    Counters.Counter private _tokenIdCounter;
+    string internal _uriBaseAddress;
 
-    constructor() ERC721("Crypto Guitars NFT", "CGF") {}
+    constructor(string memory uriBaseAddress) ERC721("Crypto Guitars NFT", "CGF")
+    {
+        _uriBaseAddress = uriBaseAddress;
+    }
 
-    function safeMint(address to, string memory uri) public onlyOwner {
-        uint256 tokenId = _tokenIdCounter.current();
-        _tokenIdCounter.increment();
+    function safeMint(address to, uint256 tokenId) public onlyOwner {
         _safeMint(to, tokenId);
+        string memory uri = _buildUri(tokenId);
         _setTokenURI(tokenId, uri);
+    }
+
+    function exists(uint256 tokenId) public view virtual returns (bool) {
+        return super._exists(tokenId);
     }
 
     // The following functions are overrides required by Solidity.
@@ -50,5 +55,9 @@ contract CryptoGuitarsNFT is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    function _buildUri(uint256 tokenId) private view returns(string memory) {
+        return string(abi.encodePacked(_uriBaseAddress, "/CryptoGuitars-", Strings.toString(tokenId), "-metadata.json"));
     }
 }

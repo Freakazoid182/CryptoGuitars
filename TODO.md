@@ -8,17 +8,16 @@
   - [X] Use https://nft-generator.art/app to generate images used own
     - [X] Set up rarities (skipped)
     - [X] Generate collection of 1000 images (made 625)
-  - [] Upload images to IPFS
-    - [] Use https://www.pinata.cloud/
+  - [X] Upload images to IPFS
+    - [X] Use https://www.pinata.cloud/
 - [X] Create Smart contract for NFT
   - [X] Use `ERC-721` contract as base
   - [X] Add features where needed (minting fee to me 🙃?)
   - [ ] Publish and test contract on Polygon test network
-- [ ] Create Website using Blazor and MudBlazor components
-  - [ ] Add site with MetaMask integration (`MetaMask.Blazor`)
-    - [ ] Display already minted images
-    - [ ] Add option to mint new NFT
-      - [ ] Select random image to mint
+- [X] Create Website using Blazor and MudBlazor components
+  - [X] Add site with MetaMask integration (`MetaMask.Blazor`)
+    - [X] Display already minted images
+    - [X] Add option to mint new NFT
   - [ ] Add page with some general information about the NFTs
   - [ ] Finalize styling and branding
     - [ ] Find some cool hipster name 😎

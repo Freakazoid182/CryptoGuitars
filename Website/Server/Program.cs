@@ -23,18 +23,11 @@ builder.Services.AddScoped<CryptoGuitarsNFTService>(services =>
     new CryptoGuitarsMarketPlaceService(services.GetRequiredService<Web3>(),
     builder.Configuration.GetValue<string>("Contracts:CryptoGuitarsMarketPlace:Address")));
 
-var httpClientRegistration = builder.Services.AddHttpClient<ITokenMetaDataService, TokenMetaDataService>();
-
-// Required when calling localhost
-#if DEBUG
-httpClientRegistration.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+var httpClientRegistration = builder.Services.AddHttpClient<ITokenMetaDataService, TokenMetaDataService>(options =>
 {
-    ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) =>
-    {
-        return true;
-    }
+    options.BaseAddress = new Uri("https://ipfs.io/ipfs/QmXgYAq8vPzjACYpJVgNdUxpMpXN6HfAV7zUDrMqbtofos/");
+    options.Timeout = TimeSpan.FromSeconds(10);
 });
-#endif
 
 var app = builder.Build();
 

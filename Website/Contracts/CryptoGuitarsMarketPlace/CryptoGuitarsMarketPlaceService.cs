@@ -78,18 +78,20 @@ namespace CryptoGuitars.Contracts.CryptoGuitarsMarketPlace
              return ContractHandler.SendRequestAndWaitForReceiptAsync(createNewTokenFunction, cancellationToken);
         }
 
-        public Task<string> CreateNewTokenRequestAsync(string to)
+        public Task<string> CreateNewTokenRequestAsync(string to, BigInteger tokenId)
         {
             var createNewTokenFunction = new CreateNewTokenFunction();
                 createNewTokenFunction.To = to;
+                createNewTokenFunction.TokenId = tokenId;
             
              return ContractHandler.SendRequestAsync(createNewTokenFunction);
         }
 
-        public Task<TransactionReceipt> CreateNewTokenRequestAndWaitForReceiptAsync(string to, CancellationTokenSource cancellationToken = null)
+        public Task<TransactionReceipt> CreateNewTokenRequestAndWaitForReceiptAsync(string to, BigInteger tokenId, CancellationTokenSource cancellationToken = null)
         {
             var createNewTokenFunction = new CreateNewTokenFunction();
                 createNewTokenFunction.To = to;
+                createNewTokenFunction.TokenId = tokenId;
             
              return ContractHandler.SendRequestAndWaitForReceiptAsync(createNewTokenFunction, cancellationToken);
         }

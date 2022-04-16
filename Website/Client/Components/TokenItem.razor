@@ -14,30 +14,37 @@
 {
     <MudPaper Class="ma-2" Height="400px" Width="180px">
         <MudImage Src="@Token.MetaData?.Image" Alt="@Token.MetaData?.Description" Class="rounded-lg ma-1"/>
-        <MudText ><b># @Token.Id</b></MudText>
+        <MudText ><b># @Token.TokenId</b></MudText>
         <MudText Typo="Typo.caption">Owned By @Token.Owner?.Substring(0, 10)</MudText><br />
-        @if(Token.IsOffered)
+        @if(TokenCanBeMinted())
         {
-            <MudText Typo="Typo.caption">Offered for: @Web3.Convert.FromWei((BigInteger)Token.OfferPrice) eth</MudText><br />
+            <MudButton Color="Color.Tertiary" Variant="Variant.Filled" @onclick="Mint">Mint</MudButton>
         }
         else
         {
-            <MudText Typo="Typo.caption">No offering</MudText><br />
-        }
-        @if(NeedsAllowMarket())
-        {
-            <MudButton Class="my-2" Color="Color.Tertiary" Variant="Variant.Filled" @onclick="AllowMarketOperator">Approve for Market</MudButton>
-        }
-        @if(!NeedsAllowMarket() && TokenCanBeOffered())
-        {
-            <MudForm @ref="form">
-                <MudTextField Class="my-2" Required="true" @bind-Value="offerPrice" Label="Amount (eth)" Variant="Variant.Text" Adornment="Adornment.Start" />
-                <MudButton Class="my-2" Color="Color.Tertiary" Variant="Variant.Filled" @onclick="() => Offer()">Offer it!</MudButton>
-            </MudForm>
-        }
-        @if(TokenCanBeBought())
-        {
-            <MudButton Color="Color.Tertiary" Variant="Variant.Filled" @onclick="() => Buy()">Buy</MudButton>
+            @if(Token.IsOffered && Token.OfferPrice != null)
+            {
+                <MudText Typo="Typo.caption">Offered for: @Web3.Convert.FromWei((BigInteger)Token.OfferPrice) eth</MudText><br />
+            }
+            else
+            {
+                <MudText Typo="Typo.caption">No offering</MudText><br />
+            }
+            @if(NeedsAllowMarket())
+            {
+                <MudButton Class="my-2" Color="Color.Tertiary" Variant="Variant.Filled" @onclick="AllowMarketOperator">Approve for Market</MudButton>
+            }
+            @if(!NeedsAllowMarket() && TokenCanBeOffered())
+            {
+                <MudForm @ref="form">
+                    <MudTextField Class="my-2" Required="true" @bind-Value="offerPrice" Label="Amount (eth)" Variant="Variant.Text" Adornment="Adornment.Start" />
+                    <MudButton Class="my-2" Color="Color.Tertiary" Variant="Variant.Filled" @onclick="Offer">Offer it!</MudButton>
+                </MudForm>
+            }
+            @if(TokenCanBeBought())
+            {
+                <MudButton Color="Color.Tertiary" Variant="Variant.Filled" @onclick="Buy">Buy</MudButton>
+            }
         }
     </MudPaper>
 }
@@ -93,6 +100,34 @@
         StateHasChanged();
     }
 
+    private async Task Mint()
+    {
+
+        if(!TokenCanBeMinted()) return;
+
+        var contractAddress = Configuration["Contracts:CryptoGuitarsMarketPlace:Address"];
+
+        var receipt = await MetaMaskService.SendTransactionAndWaitForReceipt
+        (
+            Web3Service.Client,
+            "createNewToken",
+            contractAddress,
+            Web3.Convert.ToWei(0.05),
+            new List<Parameter>
+            {
+                new Parameter("address", "to"),
+                new Parameter("uint256", "tokenId")
+            }.ToArray(),
+            MetaMaskState!.SelectedAddress,
+            Token!.TokenId
+        );
+
+        AccountState!.TokenBalance++;
+        Token.Owner = MetaMaskState!.SelectedAddress;
+
+        StateHasChanged();
+    }
+
     private async Task Offer()
     {
         if (Token == null) return;
@@ -117,7 +152,7 @@
                 new Parameter("uint256", "tokenId"),
                 new Parameter("uint256", "price")
             }.ToArray(),
-            Token.Id,
+            Token.TokenId,
             offerPriceWei
         );
 
@@ -129,7 +164,7 @@
 
     private async Task Buy()
     {
-        if (Token == null) return;
+        if (!TokenCanBeBought()) return;
 
         var contractAddress = Configuration["Contracts:CryptoGuitarsMarketPlace:Address"];
 
@@ -138,12 +173,12 @@
             Web3Service.Client,
             "buyToken",
             contractAddress,
-            (BigInteger)Token.OfferPrice,
+            (BigInteger)Token!.OfferPrice!,
             new List<Parameter>
             {
                 new Parameter("uint256", "_tokenId"),
             }.ToArray(),
-            Token.Id
+            Token.TokenId
         );
 
         Token.IsOffered = false;
@@ -151,6 +186,12 @@
         Token.OfferPrice = 0;
 
         StateHasChanged();
+    }
+
+    private bool TokenCanBeMinted()
+    {
+        if(Token == null) return false;
+        return Token.Owner == null;
     }
 
     private bool TokenCanBeOffered()
@@ -166,6 +207,7 @@
         if(Token == null) return false;
         return
             Token.Owner?.ToLower() != MetaMaskState?.SelectedAddress?.ToLower() &&
+            Token.OfferPrice != null &&
             Token.IsOffered == true;
     }
 

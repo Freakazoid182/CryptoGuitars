@@ -6,6 +6,7 @@ using CryptoGuitars.Shared.Enums;
 using CryptoGuitars.Shared.Extensions;
 using System.ComponentModel.DataAnnotations;
 using CryptoGuitars.Contracts.CryptoGuitarsMarketPlace;
+using CryptoGuitars.Contracts.CryptoGuitarsMarketPlace.ContractDefinition;
 
 namespace CryptoGuitars.Server.Controllers;
 
@@ -35,20 +36,13 @@ public class CryptoGuitarTokensController : ControllerBase
     public async Task<IActionResult> Get(
         [FromQuery, Required, Range(0, 10)] int limit,
         [FromQuery] int offset = 0,
-        [FromQuery] Sort sort = Sort.Desc)
+        [FromQuery] Sort sort = Sort.Asc)
     {
-
-        var totalSupply = (int)(await _nftService.TotalSupplyQueryAsync());
-        if (limit > totalSupply)
-        {
-            return BadRequest(new ValidationResult("'limit' cannot be higher than supply", new [] { "limit" }));
-        }
-
         var tokens = new List<CryptoGuitarTokenDTO>();
         var getTokenDataTasks = new List<Task>();
-        for (uint i = 0; i < limit; i++)
+        for (uint tokenId = 0; tokenId < limit; tokenId++)
         {
-            getTokenDataTasks.Add(GetTokenDataAsync(i));
+            getTokenDataTasks.Add(GetTokenDataAsync(tokenId));
         }
 
         await Task.WhenAll(getTokenDataTasks);
@@ -57,30 +51,33 @@ public class CryptoGuitarTokensController : ControllerBase
 
         return Ok(new GetCryptoGuitarTokensDTO
         {
-            Data = sort.Apply(tokens, t => t.Id).ToList(),
-            Total = totalSupply,
-            NextPage = offset + limit < totalSupply,
+            Data = sort.Apply(tokens, t => t.TokenId).ToList(),
+            Total = 625,
+            NextPage = offset + limit < 625,
             Limit = limit,
             Offset = offset
         });
     }
 
-    private async Task<CryptoGuitarTokenDTO> GetTokenDataAsync(uint i)
+    private async Task<CryptoGuitarTokenDTO> GetTokenDataAsync(uint tokenId)
     {
-        var tokenId = await _nftService.TokenByIndexQueryAsync(i);
-        var tokenOwner = await _nftService.OwnerOfQueryAsync(tokenId);
-        var tokenUri = new Uri(await _nftService.TokenURIQueryAsync(tokenId));
-        var tokenOffer = await _marketPlaceService.GetActiveOfferQueryAsync(tokenId);
-        var tokenMetaData = await _tokenMetaDataService.GetAsync(tokenUri);
+        var tokenMetaData = await _tokenMetaDataService.GetAsync(new Uri($"CryptoGuitars-{tokenId}-metadata.json", UriKind.Relative));
+        var exists = await _nftService.ExistsQueryAsync(tokenId);
+
+        string? tokenOwner = null;
+        GetActiveOfferOutputDTO? tokenOffer = null;
+        if(exists)
+        {
+            tokenOwner = await _nftService.OwnerOfQueryAsync(tokenId);
+            tokenOffer = await _marketPlaceService.GetActiveOfferQueryAsync(tokenId);
+        }
 
         return new CryptoGuitarTokenDTO
         {
-            Id = (uint)tokenId,
-            Uri = tokenUri,
             Owner = tokenOwner,
-            Index = i,
-            OfferPrice = (decimal)tokenOffer.ReturnValue1.Price,
-            IsOffered = tokenOffer.ReturnValue1.Active,
+            TokenId = tokenId,
+            OfferPrice = (double?)tokenOffer?.ReturnValue1?.Price ?? 0d,
+            IsOffered = tokenOffer?.ReturnValue1?.Active ?? false,
             MetaData = tokenMetaData
         };
     }

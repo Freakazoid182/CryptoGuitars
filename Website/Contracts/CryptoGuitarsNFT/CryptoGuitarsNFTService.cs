@@ -84,6 +84,20 @@ namespace CryptoGuitars.Contracts.CryptoGuitarsNFT
             return ContractHandler.QueryAsync<BalanceOfFunction, BigInteger>(balanceOfFunction, blockParameter);
         }
 
+        public Task<bool> ExistsQueryAsync(ExistsFunction existsFunction, BlockParameter blockParameter = null)
+        {
+            return ContractHandler.QueryAsync<ExistsFunction, bool>(existsFunction, blockParameter);
+        }
+
+        
+        public Task<bool> ExistsQueryAsync(BigInteger tokenId, BlockParameter blockParameter = null)
+        {
+            var existsFunction = new ExistsFunction();
+                existsFunction.TokenId = tokenId;
+            
+            return ContractHandler.QueryAsync<ExistsFunction, bool>(existsFunction, blockParameter);
+        }
+
         public Task<string> GetApprovedQueryAsync(GetApprovedFunction getApprovedFunction, BlockParameter blockParameter = null)
         {
             return ContractHandler.QueryAsync<GetApprovedFunction, string>(getApprovedFunction, blockParameter);
@@ -179,20 +193,20 @@ namespace CryptoGuitars.Contracts.CryptoGuitarsNFT
              return ContractHandler.SendRequestAndWaitForReceiptAsync(safeMintFunction, cancellationToken);
         }
 
-        public Task<string> SafeMintRequestAsync(string to, string uri)
+        public Task<string> SafeMintRequestAsync(string to, BigInteger tokenId)
         {
             var safeMintFunction = new SafeMintFunction();
                 safeMintFunction.To = to;
-                safeMintFunction.Uri = uri;
+                safeMintFunction.TokenId = tokenId;
             
              return ContractHandler.SendRequestAsync(safeMintFunction);
         }
 
-        public Task<TransactionReceipt> SafeMintRequestAndWaitForReceiptAsync(string to, string uri, CancellationTokenSource cancellationToken = null)
+        public Task<TransactionReceipt> SafeMintRequestAndWaitForReceiptAsync(string to, BigInteger tokenId, CancellationTokenSource cancellationToken = null)
         {
             var safeMintFunction = new SafeMintFunction();
                 safeMintFunction.To = to;
-                safeMintFunction.Uri = uri;
+                safeMintFunction.TokenId = tokenId;
             
              return ContractHandler.SendRequestAndWaitForReceiptAsync(safeMintFunction, cancellationToken);
         }

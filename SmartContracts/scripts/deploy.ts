@@ -15,7 +15,7 @@ async function main() {
 
   // We get the contract to deploy
   const GuitarsNFT = await ethers.getContractFactory("CryptoGuitarsNFT");
-  const guitarsNFT = await GuitarsNFT.deploy();
+  const guitarsNFT = await GuitarsNFT.deploy("https://ipfs.io/QmXgYAq8vPzjACYpJVgNdUxpMpXN6HfAV7zUDrMqbtofos");
 
   await guitarsNFT.deployed();
 
@@ -24,8 +24,7 @@ async function main() {
   const GuitarsMarketPlace = await ethers.getContractFactory("CryptoGuitarsMarketPlace");
   const guitarsMarketPlace = await GuitarsMarketPlace.deploy(
     guitarsNFT.address,
-    "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
-    "http://localhost:5163");
+    "0x70997970c51812dc3a010c7d01b50e0d17dc79c8");
 
   await guitarsMarketPlace.deployed();
 

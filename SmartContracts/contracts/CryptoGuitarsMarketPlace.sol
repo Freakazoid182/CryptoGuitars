@@ -11,8 +11,6 @@ contract CryptoGuitarsMarketPlace is Ownable {
 
     address payable internal _feeReceiverAddress;
 
-    string internal _uriBaseAddress;
-
     uint256 internal _newTokenPrice = 0.05 ether;
 
     struct Offer {
@@ -29,11 +27,9 @@ contract CryptoGuitarsMarketPlace is Ownable {
 
     constructor(
         address cryptoGuitarsNFTContractAddress,
-        address payable feeReceiverAddress,
-        string memory uriBaseAddress) {
+        address payable feeReceiverAddress) {
         _cryptoGuitarsNFTContract = CryptoGuitarsNFT(cryptoGuitarsNFTContractAddress);
         _feeReceiverAddress = feeReceiverAddress;
-        _uriBaseAddress = uriBaseAddress;
     }
 
     modifier onlyTokenOwner(uint256 _tokenId) {
@@ -71,16 +67,11 @@ contract CryptoGuitarsMarketPlace is Ownable {
     }
 
     // Create a new token (mint)
-    function createNewToken(address to) external payable {
+    function createNewToken(address to, uint256 tokenId) external payable {
         require(msg.value == _newTokenPrice, "ether value is incorrect");
 
-        // TokenId will be the same as the total token supply
-        uint256 tokenId = _cryptoGuitarsNFTContract.totalSupply();
-
-        string memory uri = _buildUri(tokenId);
-
         // Mint a new token
-        _cryptoGuitarsNFTContract.safeMint(to, uri);
+        _cryptoGuitarsNFTContract.safeMint(to, tokenId);
 
         // Sending the complete value of the token to a fee receiver
         _feeReceiverAddress.transfer(msg.value);
@@ -131,9 +122,5 @@ contract CryptoGuitarsMarketPlace is Ownable {
     function _setOfferInactive(uint256 _tokenId) internal {
         offers[tokenIdToOffer[_tokenId].index].active = false;
         delete tokenIdToOffer[_tokenId];
-    }
-
-    function _buildUri(uint256 tokenId) private view returns(string memory) {
-        return string(abi.encodePacked(_uriBaseAddress, "/metadata/CryptoGuitars-", Strings.toString(tokenId), "-metadata.json"));
     }
 }
