@@ -133,7 +133,10 @@
 
     private async Task ConnectMetaMask()
     {
-        await MetaMaskService.ConnectMetaMask();
+        if(!(await MetaMaskService.IsSiteConnected()))
+        {
+            await MetaMaskService.ConnectMetaMask();
+        }
         await GetSelectedAddress();
     }
     private async Task GetSelectedAddress()
