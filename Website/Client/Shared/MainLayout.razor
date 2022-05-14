@@ -5,7 +5,7 @@
 @inject MetaMaskService MetaMaskService
 @inject IHttpClientFactory HttpClientFactory
 
-<MudThemeProvider IsDarkMode="true"/>
+<MudThemeProvider IsDarkMode="true" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
@@ -13,6 +13,11 @@
     <MudAppBar Elevation="0">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudSpacer />
+
+        @if (!_hasMetaMask)
+        {
+            <MudText Class="px-4" Typo="Typo.overline">Please Install <MudLink Target="_blank" Href="https://metamask.io/">MetaMask</MudLink></MudText>
+        }
         <MudAvatar @bind-Color="_avatarColor" Variant="Variant.Outlined">
             <MudIcon Icon="@Icons.Material.Filled.AccountCircle" @onclick="ConnectMetaMask" />
         </MudAvatar>
@@ -23,24 +28,15 @@
         </MudDrawerHeader>
         <NavMenu />
     </MudDrawer>
-        <MudMainContent>
-        @if((AccountState != null && MetaMaskState != null) || !_hasMetaMask)
-        {
-            <CascadingValue Value="@AccountState">
-                <CascadingValue Value="@MetaMaskState">
-                    <MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
-                        @Body
-                    </MudContainer>
-                </CascadingValue>
+    <MudMainContent>
+        <CascadingValue Value="@AccountState">
+            <CascadingValue Value="@MetaMaskState">
+                <MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
+                    @Body
+                </MudContainer>
             </CascadingValue>
-        }
-        else
-        {
-            <MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
-                @Body
-            </MudContainer>
-        }
-        </MudMainContent>
+        </CascadingValue>
+    </MudMainContent>
 </MudLayout>
 
 @code {
@@ -96,9 +92,9 @@
 
     private void UpdateState()
     {
-        if(!string.IsNullOrEmpty(_selectedAddress) && _selectedChain.HasValue)
+        if (!string.IsNullOrEmpty(_selectedAddress) && _selectedChain.HasValue)
         {
-            if(MetaMaskState == null)
+            if (MetaMaskState == null)
             {
                 MetaMaskState ??= new MetaMaskState(_hasMetaMask, _selectedAddress, _selectedChain.Value);
             }
@@ -139,7 +135,7 @@
 
     private async Task ConnectMetaMask()
     {
-        if(!(await MetaMaskService.IsSiteConnected()))
+        if (!(await MetaMaskService.IsSiteConnected()))
         {
             await MetaMaskService.ConnectMetaMask();
         }
@@ -148,7 +144,7 @@
     private async Task GetSelectedAddress()
     {
         _selectedAddress = await MetaMaskService.GetSelectedAddress();
-        if(_selectedAddress != null)
+        if (_selectedAddress != null)
             _avatarColor = Color.Primary;
 
         Console.WriteLine($"Address: {_selectedAddress}");
@@ -164,7 +160,7 @@
 
     private async Task GetMarketApproved()
     {
-        if(string.IsNullOrEmpty(_selectedAddress))
+        if (string.IsNullOrEmpty(_selectedAddress))
         {
             _isMarketApproved = false;
             return;
@@ -182,7 +178,7 @@
 
     private async Task GetBalanceOf()
     {
-        if(string.IsNullOrEmpty(_selectedAddress))
+        if (string.IsNullOrEmpty(_selectedAddress))
         {
             _tokenBalance = 0;
             return;
