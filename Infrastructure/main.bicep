@@ -1,16 +1,32 @@
 targetScope = 'subscription'
 
+@allowed([
+  'stg'
+  'prd'
+])
+param environment string
+
 param location string = 'northeurope'
 
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: 'cg-site'
+  name: '${environment}-cg-site'
   location: location
 }
 
-module staticSite 'staticWebstorageAccount.bicep' = {
+module clientSite 'staticWebstorageAccount.bicep' = {
   scope: resourceGroup
   name: 'storageAccountDeployment'
   params: {
+    environment: environment
+    location: location
+  }
+}
+
+module server 'appServiceLinux.bicep' = {
+  scope: resourceGroup
+  name: 'appServiceLinuxDeployment'
+  params: {
+    environment: environment
     location: location
   }
 }

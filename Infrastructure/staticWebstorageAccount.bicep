@@ -1,6 +1,12 @@
 param location string = resourceGroup().location
 
-param name string = 'cgclientsite'
+@allowed([
+  'stg'
+  'prd'
+])
+param environment string
+
+param name string = '${environment}crytpoguitarsweb'
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
   name: name
