@@ -24,7 +24,7 @@
         <NavMenu />
     </MudDrawer>
         <MudMainContent>
-        @if(AccountState != null & MetaMaskState != null)
+        @if((AccountState != null && MetaMaskState != null) || !_hasMetaMask)
         {
             <CascadingValue Value="@AccountState">
                 <CascadingValue Value="@MetaMaskState">
@@ -33,6 +33,12 @@
                     </MudContainer>
                 </CascadingValue>
             </CascadingValue>
+        }
+        else
+        {
+            <MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
+                @Body
+            </MudContainer>
         }
         </MudMainContent>
 </MudLayout>
