@@ -21,7 +21,6 @@
   <ItemGroup>
     <Content Update="wwwroot\images\**" CopyToPublishDirectory="Never" />
     <Content Update="wwwroot\metadata\**" CopyToPublishDirectory="Never" />
-    <Content Update="appsettings.*.json" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
 </Project>
