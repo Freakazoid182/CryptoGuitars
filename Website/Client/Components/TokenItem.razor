@@ -190,13 +190,13 @@
 
     private bool TokenCanBeMinted()
     {
-        if(Token == null) return false;
+        if(MetaMaskState == null || Token == null) return false;
         return Token.Owner == null;
     }
 
     private bool TokenCanBeOffered()
     {
-        if(Token == null) return false;
+        if(MetaMaskState == null || Token == null) return false;
         return
             Token.Owner?.ToLower() == MetaMaskState?.SelectedAddress?.ToLower() &&
             Token.IsOffered != true;
@@ -204,7 +204,7 @@
 
     private bool TokenCanBeBought()
     {
-        if(Token == null) return false;
+        if(MetaMaskState == null || Token == null) return false;
         return
             Token.Owner?.ToLower() != MetaMaskState?.SelectedAddress?.ToLower() &&
             Token.OfferPrice != null &&
