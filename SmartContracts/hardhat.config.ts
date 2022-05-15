@@ -33,18 +33,18 @@ const config: HardhatUserConfig = {
     hardhat: {
       chainId: 1337
     },
-    ropsten: {
-      url: process.env.ROPSTEN_URL || "",
+    matic: {
+      url: "https://rpc-mumbai.maticvigil.com",
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    },
+    }
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
     currency: "USD",
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: process.env.POLYGONSCAN_API_KEY
   },
 };
 

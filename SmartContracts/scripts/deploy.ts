@@ -5,6 +5,11 @@
 // Runtime Environment's members available in the global scope.
 import { ethers } from "hardhat";
 
+import * as dotenv from "dotenv";
+import { string } from "hardhat/internal/core/params/argumentTypes";
+
+dotenv.config();
+
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
   // line interface.
@@ -24,7 +29,7 @@ async function main() {
   const GuitarsMarketPlace = await ethers.getContractFactory("CryptoGuitarsMarketPlace");
   const guitarsMarketPlace = await GuitarsMarketPlace.deploy(
     guitarsNFT.address,
-    "0x70997970c51812dc3a010c7d01b50e0d17dc79c8");
+    process.env.PUBLIC_KEY !== undefined ? process.env.PUBLIC_KEY : "");
 
   await guitarsMarketPlace.deployed();
 
