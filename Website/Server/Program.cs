@@ -7,6 +7,7 @@ using CryptoGuitars.Contracts.CryptoGuitarsMarketPlace;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddMemoryCache();
 builder.Services.AddResponseCaching();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
