@@ -27,7 +27,7 @@ builder.Services.AddScoped<CryptoGuitarsNFTService>(services =>
 var httpClientRegistration = builder.Services.AddHttpClient<ITokenMetaDataService, TokenMetaDataService>(options =>
 {
     options.BaseAddress = new Uri("https://ipfs.io/ipfs/QmXgYAq8vPzjACYpJVgNdUxpMpXN6HfAV7zUDrMqbtofos/");
-    options.Timeout = TimeSpan.FromSeconds(10);
+    options.Timeout = TimeSpan.FromSeconds(30);
 });
 
 var app = builder.Build();

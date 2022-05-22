@@ -1,5 +1,8 @@
 param location string = resourceGroup().location
-param sku string = 'S1' // The SKU of App Service Plan
+param sku string = 'F1' // The SKU of App Service Plan
+
+@secure()
+param web3BaseUrl string
 
 @allowed([
   'stg'
@@ -32,6 +35,10 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
         {
           name: 'DOTNET_ENVIRONMENT'
           value: environment == 'stg' ? 'Staging' : 'Production'
+        }
+        {
+          name: 'Web3__BaseUrl'
+          value: web3BaseUrl
         }
       ]
       linuxFxVersion: 'DOTNETCORE|6.0'

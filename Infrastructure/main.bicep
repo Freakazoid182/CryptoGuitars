@@ -8,6 +8,9 @@ param environment string
 
 param location string = 'northeurope'
 
+@secure()
+param web3BaseUrl string
+
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: '${environment}-cg-site'
   location: location
@@ -28,5 +31,6 @@ module server 'appServiceLinux.bicep' = {
   params: {
     environment: environment
     location: location
+    web3BaseUrl: web3BaseUrl
   }
 }
